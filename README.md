@@ -39,13 +39,16 @@ which perform some queries and demonstrate the flexibility of our Octree impleme
 
 The different examples show some use cases of the octree. `example1` demonstrates the general usage with point data types providing public access to x,y,z coordinates. `example2` shows how to use a different point type, which non-public coordinates. `example3` shows how to use the templated method inside an also templated descriptor.
 
-We also provide a test case using the [Google Test Framework (GTest)](https://code.google.com/p/googletest/), which is automatically build if the package is eather found by Cmake or in the corresponding source directory.
+We also provide a test case using the [Google Test Framework (GTest)](https://code.google.com/p/googletest/), which is automatically build if the package is either found by Cmake or in the corresponding source directory, e.g., /usr/src/gtest/.
 You can invoke the testsuite with
 
 ```bash
 ./octree-test
 ```
 
+## Contact
+
+Feel free to contact me (see also my [academic homepage](http://www.iai.uni-bonn.de/~behley/)) if you have questions regarding the implementation.
 
 ## Attribution
 
