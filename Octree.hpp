@@ -212,7 +212,11 @@ struct OctreeParams
  * container. For the points, we used an access trait to access the coordinates inspired by boost.geometry.
  * The implementation already provides a general access trait, which expects to have public member variables x,y,z.
  *
- * If you use the implementation in
+ * f you use the implementation or ideas from the corresponding paper in your academic work, it would be nice if you
+ * cite the corresponding paper:
+ *
+ *    J. Behley, V. Steinhage, A.B. Cremers. Efficient Radius Neighbor Search in Three-dimensional Point Clouds,
+ *    Proc. of the IEEE International Conference on Robotics and Automation (ICRA), 2015.
  *
  * In future, we might add also other neighbor queries and implement the removal and adding of points.
  *
