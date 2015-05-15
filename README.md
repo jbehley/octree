@@ -13,7 +13,7 @@ This repository provides the Octree implementation of the paper "Efficient Radiu
 
 The octree itself has no dependencies. 
 However, for compiling the examples, you need [CMake](http://www.cmake.org/) and [Boost C++ library](http://www.boost.org/).
-For building the examples you have to
+For building the examples you have to first build the project:
 
 ```bash
 mkdir build
@@ -37,11 +37,13 @@ Now you can run the examples:
 
 which perform some queries and demonstrate the flexibility of our Octree implementation to handle different implementations of points.
 
+The different examples show some use cases of the octree. `example1` demonstrates the general usage with point data types providing public access to x,y,z coordinates. `example2` shows how to use a different point type, which non-public coordinates. `example3` shows how to use the templated method inside an also templated descriptor.
+
 We also provide a test case using the [Google Test Framework (GTest)](https://code.google.com/p/googletest/), which is automatically build if the package is eather found by Cmake or in the corresponding source directory.
 You can invoke the testsuite with
 
 ```bash
-./runtests
+./octree-test
 ```
 
 
