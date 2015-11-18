@@ -376,7 +376,7 @@ class Octree {
   std::vector<uint32_t> successors_;  // single connected list of next point
                                       // indices...
 
-  // friend class ::OctreeTest;
+  friend class ::OctreeTest;
 };
 
 template <typename PointT, typename ContainerT>
