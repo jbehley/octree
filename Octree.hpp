@@ -31,7 +31,8 @@
 #include <vector>
 
 // needed for gtest access to protected/private members ...
-namespace {
+namespace
+{
 class OctreeTest;
 }
 
@@ -172,7 +173,7 @@ struct MaxDistance {
 
 struct OctreeParams {
  public:
-  explicit OctreeParams(uint32_t bucketSize = 32, bool copyPoints = false)
+  OctreeParams(uint32_t bucketSize = 32, bool copyPoints = false)
       : bucketSize(bucketSize), copyPoints(copyPoints) {}
   uint32_t bucketSize;
   bool copyPoints;
@@ -247,14 +248,14 @@ class Octree {
    * of reported indices of points in resultIndices **/
   template <typename Distance>
   void radiusNeighbors(const PointT& query, float radius,
-                       std::vector<uint32_t>* const resultIndices) const;
+                       std::vector<uint32_t>& resultIndices) const;
 
   /** \brief radius neighbor queries with explicit (squared) distance
    * computation. **/
   template <typename Distance>
   void radiusNeighbors(const PointT& query, float radius,
-                       std::vector<uint32_t>* const resultIndices,
-                       std::vector<float>* const distances) const;
+                       std::vector<uint32_t>& resultIndices,
+                       std::vector<float>& distances) const;
 
   /** \brief function added to this library to perform
    * nearest neighbor queries. The index of the point found is in resultIndice **/
@@ -331,13 +332,13 @@ class Octree {
   template <typename Distance>
   void radiusNeighbors(const Octant* octant, const PointT& query, float radius,
                        float sqrRadius,
-                       std::vector<uint32_t>* const resultIndices) const;
+                       std::vector<uint32_t>& resultIndices) const;
 
   template <typename Distance>
   void radiusNeighbors(const Octant* octant, const PointT& query, float radius,
                        float sqrRadius,
-                       std::vector<uint32_t>* const resultIndices,
-                       std::vector<float>* const distances) const;
+                       std::vector<uint32_t>& resultIndices,
+                       std::vector<float>& distances) const;
 
   template <typename Distance>
   void nearestNeighbor(const Octant* octant, const PointT& query,
@@ -681,14 +682,14 @@ template <typename PointT, typename ContainerT>
 template <typename Distance>
 void Octree<PointT, ContainerT>::radiusNeighbors(
     const Octant* octant, const PointT& query, float radius, float sqrRadius,
-    std::vector<uint32_t>* const resultIndices) const {
+    std::vector<uint32_t>& resultIndices) const {
   const ContainerT& points = *data_;
 
   // if search ball S(q,r) contains octant, simply add point indexes.
   if (contains<Distance>(query, sqrRadius, octant)) {
     uint32_t idx = octant->start;
     for (uint32_t i = 0; i < octant->size; ++i) {
-      resultIndices->push_back(idx);
+      resultIndices.push_back(idx);
       idx = successors_[idx];
     }
 
@@ -700,7 +701,7 @@ void Octree<PointT, ContainerT>::radiusNeighbors(
     for (uint32_t i = 0; i < octant->size; ++i) {
       const PointT& p = points[idx];
       float dist = Distance::compute(query, p);
-      if (dist < sqrRadius) resultIndices->push_back(idx);
+      if (dist < sqrRadius) resultIndices.push_back(idx);
       idx = successors_[idx];
     }
 
@@ -721,8 +722,8 @@ template <typename PointT, typename ContainerT>
 template <typename Distance>
 void Octree<PointT, ContainerT>::radiusNeighbors(
     const Octant* octant, const PointT& query, float radius, float sqrRadius,
-    std::vector<uint32_t>* const resultIndices,
-    std::vector<float>* const distances) const {
+    std::vector<uint32_t>& resultIndices,
+    std::vector<float>& distances) const {
   const ContainerT& points = *data_;
 
   // if search ball S(q,r) contains octant, simply add point indexes and compute
@@ -730,8 +731,8 @@ void Octree<PointT, ContainerT>::radiusNeighbors(
   if (contains<Distance>(query, sqrRadius, octant)) {
     uint32_t idx = octant->start;
     for (uint32_t i = 0; i < octant->size; ++i) {
-      resultIndices->push_back(idx);
-      distances->push_back(Distance::compute(query, points[idx]));
+      resultIndices.push_back(idx);
+      distances.push_back(Distance::compute(query, points[idx]));
       idx = successors_[idx];
     }
 
@@ -744,8 +745,8 @@ void Octree<PointT, ContainerT>::radiusNeighbors(
       const PointT& p = points[idx];
       float dist = Distance::compute(query, p);
       if (dist < sqrRadius) {
-        resultIndices->push_back(idx);
-        distances->push_back(dist);
+        resultIndices.push_back(idx);
+        distances.push_back(dist);
       }
       idx = successors_[idx];
     }
@@ -767,8 +768,8 @@ template <typename PointT, typename ContainerT>
 template <typename Distance>
 void Octree<PointT, ContainerT>::radiusNeighbors(
     const PointT& query, float radius,
-    std::vector<uint32_t>* const resultIndices) const {
-  resultIndices->clear();
+    std::vector<uint32_t>& resultIndices) const {
+  resultIndices.clear();
   if (root_ == 0) return;
 
   float sqrRadius = Distance::sqr(radius);  // "squared" radius
@@ -779,10 +780,10 @@ template <typename PointT, typename ContainerT>
 template <typename Distance>
 void Octree<PointT, ContainerT>::radiusNeighbors(
     const PointT& query, float radius,
-    std::vector<uint32_t>* const resultIndices,
-    std::vector<float>* const distances) const {
-  resultIndices->clear();
-  distances->clear();
+    std::vector<uint32_t>& resultIndices,
+    std::vector<float>& distances) const {
+  resultIndices.clear();
+  distances.clear();
   if (root_ == 0) return;
 
   float sqrRadius = Distance::sqr(radius);  // "squared" radius
