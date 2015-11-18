@@ -1,5 +1,5 @@
-#ifndef OCTREE_H_
-#define OCTREE_H_
+#ifndef UNIBN_OCTREE_H_
+#define UNIBN_OCTREE_H_
 
 // Copyright (c) 2015 Jens Behley, University of Bonn
 //
@@ -24,16 +24,16 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <cstring>   // memset.
-#include <iostream>  // NOLINT
+#include <cstring>
+#include <iostream>
 #include <limits>
 #include <stdint.h>
 #include <vector>
 
 // needed for gtest access to protected/private members ...
-/*namespace {
+namespace {
 class OctreeTest;
-}*/
+}
 
 namespace unibn {
 
@@ -904,5 +904,5 @@ bool Octree<PointT, ContainerT>::contains(const PointT& query, float sqRadius,
 }
 }  // namespace unibn
 
-#endif  // OCTREE_H_
+#endif  /* OCTREE_HPP_ */
 
