@@ -255,7 +255,7 @@ class Octree
      * @return index of nearest neighbor n with Distance::compute(query, n) > minDistance and otherwise -1.
      **/
     template<typename Distance>
-    uint32_t findNeighbor(const PointT& query, float minDistance = -1) const;
+    int32_t findNeighbor(const PointT& query, float minDistance = -1) const;
 
   protected:
 
@@ -300,7 +300,7 @@ class Octree
     /** @return true, if search finished, otherwise false. **/
     template<typename Distance>
     bool findNeighbor(const Octant* octant, const PointT& query, float minDistance, float& maxDistance,
-        uint32_t& resultIndex) const;
+        int32_t& resultIndex) const;
 
     template<typename Distance>
     void radiusNeighbors(const Octant* octant, const PointT& query, float radius, float sqrRadius,
@@ -746,10 +746,10 @@ bool Octree<PointT, ContainerT>::contains(const PointT& query, float sqRadius, c
 
 template<typename PointT, typename ContainerT>
 template<typename Distance>
-uint32_t Octree<PointT, ContainerT>::findNeighbor(const PointT& query, float minDistance) const
+int32_t Octree<PointT, ContainerT>::findNeighbor(const PointT& query, float minDistance) const
 {
   float maxDistance = std::numeric_limits<float>::infinity();
-  uint32_t resultIndex = -1;
+  int32_t resultIndex = -1;
   findNeighbor<Distance>(root_, query, minDistance, maxDistance, resultIndex);
 
   return resultIndex;
@@ -758,7 +758,7 @@ uint32_t Octree<PointT, ContainerT>::findNeighbor(const PointT& query, float min
 template<typename PointT, typename ContainerT>
 template<typename Distance>
 bool Octree<PointT, ContainerT>::findNeighbor(const Octant* octant, const PointT& query, float minDistance,
-    float& maxDistance, uint32_t& resultIndex) const
+    float& maxDistance, int32_t& resultIndex) const
 {
   const ContainerT& points = *data_;
   // 1. first descend to leaf and check in leafs points.
