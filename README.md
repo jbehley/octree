@@ -8,6 +8,7 @@ This repository provides the Octree implementation of the paper "Efficient Radiu
 - Fast radius neighbor search for three-dimensional point clouds.
 - Fully templated for maximal flexibility to support arbitrary point representations & containers
 - Supports arbitrary p-norms: L1, L2 and Maximum norm included.
+- Nearest neighbor search with arbitrary norms (added 25. November 2015).
 
 ## Building the examples & tests
 
@@ -25,7 +26,7 @@ make
 To run the examples, you need some point cloud data:
 
 ```bash
-wget http://www.iai.uni-bonn.de/~behley/data/wachtberg_folds.zip
+wget hhttp://jbehley.github.io/data/wachtberg_folds.zip
 unzip wachtberg_folds.zip -d data
 ```
 
@@ -48,11 +49,11 @@ You can invoke the testsuite with
 
 ## Contact
 
-Feel free to contact me (see also my [academic homepage](http://www.iai.uni-bonn.de/~behley/)) if you have questions regarding the implementation.
+Feel free to contact me (see also my [academic homepage](http://jbehley.github.io/)) if you have questions regarding the implementation.
 
 ## Attribution
 
-If you use the implementation or ideas from the [corresponding paper](http://www.iai.uni-bonn.de/~behley/papers/behley2015icra.pdf) in your academic work, it would be nice if you cite the corresponding paper:
+If you use the implementation or ideas from the [corresponding paper](http://jbehley.github.io/papers/behley2015icra.pdf) in your academic work, it would be nice if you cite the corresponding paper:
 
 J. Behley, V. Steinhage, A.B. Cremers. *Efficient Radius Neighbor Search in Three-dimensional Point Clouds*, Proc. of the IEEE International Conference on Robotics and Automation (ICRA), 2015.
 
