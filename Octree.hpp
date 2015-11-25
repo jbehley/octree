@@ -786,9 +786,9 @@ bool Octree<PointT, ContainerT>::findNeighbor(const Octant* octant, const PointT
 
   // determine Morton code for each point...
   uint32_t mortonCode = 0;
-  if (query.x > octant->x) mortonCode |= 1;
-  if (query.y > octant->y) mortonCode |= 2;
-  if (query.z > octant->z) mortonCode |= 4;
+  if (get<0>(query) > octant->x) mortonCode |= 1;
+  if (get<1>(query) > octant->y) mortonCode |= 2;
+  if (get<2>(query) > octant->z) mortonCode |= 4;
 
   if (octant->child[mortonCode] != 0)
   {
@@ -817,9 +817,9 @@ bool Octree<PointT, ContainerT>::inside(const PointT& query, float radius, const
 {
 // we exploit the symmetry to reduce the test to test
 // whether the farthest corner is inside the search ball.
-  float x = query.x - octant->x;
-  float y = query.y - octant->y;
-  float z = query.z - octant->z;
+  float x = get<0>(query) - octant->x;
+  float y = get<1>(query) - octant->y;
+  float z = get<2>(query) - octant->z;
 
   x = std::abs(x) + radius;
   y = std::abs(y) + radius;

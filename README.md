@@ -26,7 +26,7 @@ make
 To run the examples, you need some point cloud data:
 
 ```bash
-wget hhttp://jbehley.github.io/data/wachtberg_folds.zip
+wget http://jbehley.github.io/data/wachtberg_folds.zip
 unzip wachtberg_folds.zip -d data
 ```
 
