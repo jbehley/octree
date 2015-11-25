@@ -239,46 +239,41 @@ TEST_F(OctreeTest, Initialize)
   }
 }
 
-//TEST_F(OctreeTest, FindNeighbor)
-//{
-//  // compare with bruteforce search.
-//  uint32_t N = 1000;
-//
-//  boost::mt11213b mtwister(1234);
-//  boost::uniform_int<> uni_dist(0, N - 1);
-//
-//  std::vector<Point3f> points;
-//  randomPoints(points, N, 1234);
-//
-//  NaiveNeighborSearch<Point3f> bruteforce;
-//  bruteforce.initialize(points);
-//  unibn::Octree<Point3f> octree;
-//  octree.initialize(points);
-//
-//  for (uint32_t i = 0; i < 10; ++i)
-//  {
-//    uint32_t index = uni_dist(mtwister);
-//    const Point3f& query = points[index];
-//    // allow self-match
-//    ASSERT_EQ(index, bruteforce.findNeighbor<unibn::L2Distance<Point3f> >(query));
-//    ASSERT_EQ(bruteforce.findNeighbor<unibn::L2Distance<Point3f> >(query),
-//        octree.findNeighbor<unibn::L2Distance<Point3f> >(query));
-//
-//    // disallow self-match
-//    uint32_t bfneighbor = bruteforce.findNeighbor<unibn::L2Distance<Point3f> >(query, 0.0f);
-//    uint32_t octneighbor = octree.findNeighbor<unibn::L2Distance<Point3f> >(query, 0.0f);
-//
-////    std::cout << "bf dist = " << unibn::L2Distance<Point3f>::compute(query, points[bfneighbor]) << std::endl;
-////    std::cout << "oct dist = " << unibn::L2Distance<Point3f>::compute(query, points[octneighbor]) << std::endl;
-//
-//    ASSERT_EQ(bfneighbor, octneighbor);
-//    ASSERT_EQ(bfneighbor, octree.findNeighborNoPruning<unibn::L2Distance<Point3f> >(query, 0.0f));
-//
-//    ASSERT_EQ(bruteforce.findNeighbor<unibn::L2Distance<Point3f> >(query, 0.3f),
-//        octree.findNeighbor<unibn::L2Distance<Point3f> >(query,0.3f));
-//  }
-//
-//}
+TEST_F(OctreeTest, FindNeighbor)
+{
+  // compare with bruteforce search.
+  uint32_t N = 1000;
+
+  boost::mt11213b mtwister(1234);
+  boost::uniform_int<> uni_dist(0, N - 1);
+
+  std::vector<Point3f> points;
+  randomPoints(points, N, 1234);
+
+  NaiveNeighborSearch<Point3f> bruteforce;
+  bruteforce.initialize(points);
+  unibn::Octree<Point3f> octree;
+  octree.initialize(points);
+
+  for (uint32_t i = 0; i < 10; ++i)
+  {
+    uint32_t index = uni_dist(mtwister);
+    const Point3f& query = points[index];
+
+    // allow self-match
+    ASSERT_EQ(index, bruteforce.findNeighbor<unibn::L2Distance<Point3f> >(query));
+    ASSERT_EQ(bruteforce.findNeighbor<unibn::L2Distance<Point3f> >(query),
+        octree.findNeighbor<unibn::L2Distance<Point3f> >(query));
+
+    // disallow self-match
+    uint32_t bfneighbor = bruteforce.findNeighbor<unibn::L2Distance<Point3f> >(query, 0.0f);
+    uint32_t octneighbor = octree.findNeighbor<unibn::L2Distance<Point3f> >(query, 0.0f);
+
+    ASSERT_EQ(bruteforce.findNeighbor<unibn::L2Distance<Point3f> >(query, 0.3f),
+        octree.findNeighbor<unibn::L2Distance<Point3f> >(query,0.3f));
+  }
+
+}
 
 template<typename T>
 bool similarVectors(std::vector<T>& vec1, std::vector<T>& vec2)
