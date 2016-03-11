@@ -438,6 +438,12 @@ void Octree<PointT, ContainerT>::initialize(const ContainerT& pts, const std::ve
 {
   clear();
   params_ = params;
+
+  if (params_.copyPoints)
+    data_ = new ContainerT(pts);
+  else
+    data_ = &pts;
+
   const uint32_t N = pts.size();
   successors_ = std::vector<uint32_t>(N);
 
