@@ -13,27 +13,26 @@
 
 class CustomPoint
 {
-  public:
-    CustomPoint(float x, float y, float z) :
-        x(x), y(y), z(z)
-    {
-    }
+ public:
+  CustomPoint(float x, float y, float z) : x(x), y(y), z(z)
+  {
+  }
 
-    float getX() const
-    {
-      return x;
-    }
-    float getY() const
-    {
-      return y;
-    }
-    float getZ() const
-    {
-      return z;
-    }
+  float getX() const
+  {
+    return x;
+  }
+  float getY() const
+  {
+    return y;
+  }
+  float getZ() const
+  {
+    return z;
+  }
 
-  protected:
-    float x, y, z;
+ protected:
+  float x, y, z;
 };
 
 // access traits for CustomPoint
@@ -42,31 +41,31 @@ namespace unibn
 namespace traits
 {
 
-template<>
+template <>
 struct access<CustomPoint, 0>
 {
-    static float get(const CustomPoint& p)
-    {
-      return p.getX();
-    }
+  static float get(const CustomPoint& p)
+  {
+    return p.getX();
+  }
 };
 
-template<>
+template <>
 struct access<CustomPoint, 1>
 {
-    static float get(const CustomPoint& p)
-    {
-      return p.getY();
-    }
+  static float get(const CustomPoint& p)
+  {
+    return p.getY();
+  }
 };
 
-template<>
+template <>
 struct access<CustomPoint, 2>
 {
-    static float get(const CustomPoint& p)
-    {
-      return p.getZ();
-    }
+  static float get(const CustomPoint& p)
+  {
+    return p.getZ();
+  }
 };
 }
 }
@@ -101,12 +100,12 @@ int main(int argc, char** argv)
   const CustomPoint& q = points[0];
   octree.radiusNeighbors<unibn::L2Distance<CustomPoint> >(q, 0.2f, results);
   std::cout << results.size() << " radius neighbors (r = 0.2m) found for (" << q.getX() << ", " << q.getY() << ","
-      << q.getZ() << ")" << std::endl;
+            << q.getZ() << ")" << std::endl;
   for (uint32_t i = 0; i < results.size(); ++i)
   {
     const CustomPoint& p = points[results[i]];
     std::cout << "  " << results[i] << ": (" << p.getX() << ", " << p.getY() << ", " << p.getZ() << ") => "
-        << std::sqrt(unibn::L2Distance<CustomPoint>::compute(p, q)) << std::endl;
+              << std::sqrt(unibn::L2Distance<CustomPoint>::compute(p, q)) << std::endl;
   }
 
   // performing queries for each point in point cloud
@@ -116,7 +115,7 @@ int main(int argc, char** argv)
     octree.radiusNeighbors<unibn::L2Distance<CustomPoint> >(points[i], 0.5f, results);
   }
   end = clock();
-  double search_time = ((double) (end - begin) / CLOCKS_PER_SEC);
+  double search_time = ((double)(end - begin) / CLOCKS_PER_SEC);
   std::cout << "Searching for all radius neighbors (r = 0.5m) took " << search_time << " seconds." << std::endl;
 
   octree.clear();

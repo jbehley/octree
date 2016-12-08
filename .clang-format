@@ -1,0 +1,7 @@
+BasedOnStyle: Google
+IndentWidth: 2
+Standard: Cpp03
+ColumnLimit: 120
+AllowShortFunctionsOnASingleLine: None
+BreakBeforeBraces: Allman
+KeepEmptyLinesAtTheStartOfBlocks: true

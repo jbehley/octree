@@ -6,7 +6,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 
-template<typename PointT, typename ContainerT>
+template <typename PointT, typename ContainerT>
 void readPoints(const std::string& filename, ContainerT& points)
 {
   std::ifstream in(filename.c_str());
