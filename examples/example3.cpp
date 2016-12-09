@@ -9,48 +9,45 @@
  * \author behley
  */
 
-template<class PointT>
+template <class PointT>
 class SimpleDescriptor
 {
-  public:
-    SimpleDescriptor(float r, uint32_t dim) :
-        radius_(r), dim_(dim)
-    {
-    }
+ public:
+  SimpleDescriptor(float r, uint32_t dim) : radius_(r), dim_(dim)
+  {
+  }
 
-    void compute(const PointT& query, const std::vector<PointT>& pts, const unibn::Octree<PointT>& oct,
-        std::vector<float>& descriptor)
-    {
-      memset(&descriptor[0], 0, dim_);
+  void compute(const PointT& query, const std::vector<PointT>& pts, const unibn::Octree<PointT>& oct,
+               std::vector<float>& descriptor)
+  {
+    memset(&descriptor[0], 0, dim_);
 
-      std::vector<uint32_t> neighbors;
-      std::vector<float> distances;
+    std::vector<uint32_t> neighbors;
+    std::vector<float> distances;
 
-      // template is needed to tell the compiler that radiusNeighbors is a method.
-      oct.template radiusNeighbors<unibn::MaxDistance<PointT> >(query, radius_, neighbors, distances);
-      for (uint32_t i = 0; i < neighbors.size(); ++i)
-        descriptor[distances[i] / radius_ * dim_] += 1;
-    }
+    // template is needed to tell the compiler that radiusNeighbors is a method.
+    oct.template radiusNeighbors<unibn::MaxDistance<PointT> >(query, radius_, neighbors, distances);
+    for (uint32_t i = 0; i < neighbors.size(); ++i) descriptor[distances[i] / radius_ * dim_] += 1;
+  }
 
-    uint32_t dim() const
-    {
-      return dim_;
-    }
+  uint32_t dim() const
+  {
+    return dim_;
+  }
 
-  protected:
-    float radius_;
-    uint32_t dim_;
+ protected:
+  float radius_;
+  uint32_t dim_;
 };
 
 class Point3f
 {
-  public:
-    Point3f(float x, float y, float z) :
-        x(x), y(y), z(z)
-    {
-    }
+ public:
+  Point3f(float x, float y, float z) : x(x), y(y), z(z)
+  {
+  }
 
-    float x, y, z;
+  float x, y, z;
 };
 
 int main(int argc, char** argv)
@@ -87,7 +84,7 @@ int main(int argc, char** argv)
     desc.compute(points[i], points, octree, values);
   }
   end = clock();
-  double search_time = ((double) (end - begin) / CLOCKS_PER_SEC);
+  double search_time = ((double)(end - begin) / CLOCKS_PER_SEC);
   std::cout << "Computing simple descriptor for all points took " << search_time << " seconds." << std::endl;
 
   octree.clear();

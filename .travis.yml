@@ -1,0 +1,14 @@
+sudo: required
+dist: trusty
+language: cpp
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y libboost-random-dev libgtest-dev
+
+script:
+  - mkdir build && cd build
+  - cmake .. && make
+  - ./octree-test
+
+

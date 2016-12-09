@@ -12,13 +12,12 @@
 
 class Point3f
 {
-  public:
-    Point3f(float x, float y, float z) :
-        x(x), y(y), z(z)
-    {
-    }
+ public:
+  Point3f(float x, float y, float z) : x(x), y(y), z(z)
+  {
+  }
 
-    float x, y, z;
+  float x, y, z;
 };
 
 int main(int argc, char** argv)
@@ -51,12 +50,12 @@ int main(int argc, char** argv)
   const Point3f& q = points[0];
   octree.radiusNeighbors<unibn::L2Distance<Point3f> >(q, 0.2f, results);
   std::cout << results.size() << " radius neighbors (r = 0.2m) found for (" << q.x << ", " << q.y << "," << q.z << ")"
-      << std::endl;
+            << std::endl;
   for (uint32_t i = 0; i < results.size(); ++i)
   {
     const Point3f& p = points[results[i]];
     std::cout << "  " << results[i] << ": (" << p.x << ", " << p.y << ", " << p.z << ") => "
-        << std::sqrt(unibn::L2Distance<Point3f>::compute(p, q)) << std::endl;
+              << std::sqrt(unibn::L2Distance<Point3f>::compute(p, q)) << std::endl;
   }
 
   // performing queries for each point in point cloud
@@ -66,7 +65,7 @@ int main(int argc, char** argv)
     octree.radiusNeighbors<unibn::L2Distance<Point3f> >(points[i], 0.5f, results);
   }
   end = clock();
-  double search_time = ((double) (end - begin) / CLOCKS_PER_SEC);
+  double search_time = ((double)(end - begin) / CLOCKS_PER_SEC);
   std::cout << "Searching for all radius neighbors (r = 0.5m) took " << search_time << " seconds." << std::endl;
 
   octree.clear();
