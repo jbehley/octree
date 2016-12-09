@@ -1,8 +1,8 @@
-#include <string>
-#include <map>
-#include <queue>
 #include <gtest/gtest.h>
 #include <boost/random.hpp>
+#include <map>
+#include <queue>
+#include <string>
 
 #include "../Octree.hpp"
 
@@ -384,16 +384,41 @@ TEST_F(OctreeTest, OverlapTest)
   query = Point3f(1.0, 1.0, 2.75);
   ASSERT_FALSE(overlaps<unibn::L2Distance<Point3f> >(query, radius, radius * radius, &octant));
 
+  // Edge cases:
+  query = Point3f(1.65, 1.65, 1.25);
+  ASSERT_TRUE(overlaps<unibn::L2Distance<Point3f> >(query, radius, radius * radius, &octant));
+
+  query = Point3f(1.25, 1.65, 1.65);
+  ASSERT_TRUE(overlaps<unibn::L2Distance<Point3f> >(query, radius, radius * radius, &octant));
+
+  query = Point3f(1.65, 1.25, 1.75);
+  ASSERT_TRUE(overlaps<unibn::L2Distance<Point3f> >(query, radius, radius * radius, &octant));
+
+  query = Point3f(1.9, 1.25, 1.9);
+  ASSERT_FALSE(overlaps<unibn::L2Distance<Point3f> >(query, radius, radius * radius, &octant));
+
+  query = Point3f(1.25, 1.9, 1.9);
+  ASSERT_FALSE(overlaps<unibn::L2Distance<Point3f> >(query, radius, radius * radius, &octant));
+
+  query = Point3f(1.9, 1.9, 1.25);
+  ASSERT_FALSE(overlaps<unibn::L2Distance<Point3f> >(query, radius, radius * radius, &octant));
+
+  // corner cases:
+  query = Point3f(1.65, 1.65, 1.65);
+  ASSERT_TRUE(overlaps<unibn::L2Distance<Point3f> >(query, radius, radius * radius, &octant));
+
+  query = Point3f(1.95, 1.95, 1.95);
+  ASSERT_FALSE(overlaps<unibn::L2Distance<Point3f> >(query, radius, radius * radius, &octant));
+
   // edge special case, see Issue #3 -- Edge
   octant.x = 0.025;
-  octant.y = 0.025;
-  octant.z = 0.025;
+  octant.y = -0.025;
+  octant.z = -0.025;
   octant.extent = 0.025;
 
   query = Point3f(0.025, 0.025, 0.025);
   radius = 0.025;
 
-  ASSERT_TRUE(overlaps<unibn::L2Distance<Point3f> >(query, radius, radius * radius, &octant));
   ASSERT_FALSE(overlaps<unibn::L2Distance<Point3f> >(query, radius, radius * radius, &octant));
 }
 }

@@ -21,12 +21,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include <vector>
 #include <stdint.h>
-#include <limits>
-#include <cmath>
 #include <cassert>
+#include <cmath>
 #include <cstring>  // memset.
+#include <limits>
+#include <vector>
 
 // needed for gtest access to protected/private members ...
 namespace
@@ -365,8 +365,7 @@ Octree<PointT, ContainerT>::Octant::~Octant()
 }
 
 template <typename PointT, typename ContainerT>
-Octree<PointT, ContainerT>::Octree()
-    : root_(0), data_(0)
+Octree<PointT, ContainerT>::Octree() : root_(0), data_(0)
 {
 }
 
@@ -713,19 +712,22 @@ bool Octree<PointT, ContainerT>::overlaps(const PointT& query, float radius, flo
   y = std::abs(y);
   z = std::abs(z);
 
-  // (1) checking the line region.
   float maxdist = radius + o->extent;
 
-  // a. completely outside, since q' is outside the relevant area.
+  // Completely outside, since q' is outside the relevant area.
   if (x > maxdist || y > maxdist || z > maxdist) return false;
 
-  // b. inside the line region, one of the coordinates is inside the square.
-  if (x < o->extent || y < o->extent || z < o->extent) return true;
+  int32_t num_less_extent = (x < o->extent) + (y < o->extent) + (z < o->extent);
 
-  // (2) checking the corner region...
-  x -= o->extent;
-  y -= o->extent;
-  z -= o->extent;
+  // Checking different cases:
+
+  // a. inside the surface region of the octant.
+  if (num_less_extent > 1) return true;
+
+  // b. checking the corner region && edge region.
+  x = std::max(x - o->extent, 0.0f);
+  y = std::max(y - o->extent, 0.0f);
+  z = std::max(z - o->extent, 0.0f);
 
   return (Distance::norm(x, y, z) < sqRadius);
 }
