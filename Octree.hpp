@@ -21,6 +21,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include <algorithm>
 #include <vector>
 #include <stdint.h>
 #include <limits>
@@ -84,6 +85,31 @@ template<int D, typename PointT>
 inline float get(const PointT& p)
 {
   return traits::access<PointT, D>::get(p);
+}
+
+/** convenience functions added to this library to
+ * do some useful operation on Point **/
+template <typename PointT>
+PointT cross(PointT u, PointT v) {
+    PointT cross;
+    cross.x = u.y*v.z - u.z*v.y;
+    cross.y = u.z*v.x - u.x*v.z;
+    cross.z = u.x*v.y - u.y*v.x;
+    return cross;
+}
+template <typename PointT>
+PointT sub(PointT u, PointT v) {
+    PointT sub;
+    sub.x = u.x - v.x;
+    sub.y = u.y - v.y;
+    sub.z = u.z - v.z;
+    return sub;
+}
+template <typename PointT>
+float dot(PointT u, PointT v) {
+    float dot;
+    dot = u.x * v.x + u.y * v.y + u.z * v.z;
+    return dot;
 }
 
 /**
@@ -241,6 +267,10 @@ class Octree
 
     /** \brief remove all data inside the octree. **/
     void clear();
+    
+    /** \brief function added to this library to expand the octree to include new_pt. **/
+    template <typename Distance>
+    void expand(const PointT& new_pt, const ContainerT& pts, const OctreeParams& params = OctreeParams());
 
     /** \brief radius neighbor queries where radius determines the maximal radius of reported indices of points in resultIndices **/
     template<typename Distance>
@@ -250,6 +280,11 @@ class Octree
     template<typename Distance>
     void radiusNeighbors(const PointT& query, float radius, std::vector<uint32_t>& resultIndices,
         std::vector<float>& distances) const;
+    
+    /** \brief function added to this library to perform nearest neighbor queries.
+     * The index of the point found is in resultIndice **/
+    template <typename Distance>
+    void nearestNeighbor(const PointT& query, uint32_t* const resultIndice) const;
 
     /** \brief nearest neighbor queries. Using minDistance >= 0, we explicitly disallow self-matches.
      * @return index of nearest neighbor n with Distance::compute(query, n) > minDistance and otherwise -1.
@@ -296,6 +331,33 @@ class Octree
      * \return  octant with children nodes.
      */
     Octant* createOctant(float x, float y, float z, float extent, uint32_t startIdx, uint32_t endIdx, uint32_t size);
+    
+    /** \brief function added to this library to test if point is inside octant cell.
+     * To do so the 8 corners of the octant cell are used.
+     * These corners are defined as follow :
+     *
+     *         7         6
+     *         *--------*
+     *        /|       /|
+     *       / |      / |
+     *     3*--------*2 |
+     *      | 4*-----|--*5
+     *      | /      | /
+     *      |/       |/
+     *      *--------*
+     *      0        1
+     *
+     * @param point         point to test
+     * @param octant_x      x coordinate of center of the octant
+     * @param octant_y      y coordinate of center of the octant
+     * @param octant_z      z coordinate of center of the octant
+     * @param octant_extent extent of the octant
+     *
+     * @return true if point is inside octant cell, false otherwise.
+     */
+    template <typename Distance>
+    bool insideOctantCell(const PointT& point, float octant_x, float octant_y,
+                          float octant_z, float octant_extent);
 
     /** @return true, if search finished, otherwise false. **/
     template<typename Distance>
@@ -309,6 +371,11 @@ class Octree
     template<typename Distance>
     void radiusNeighbors(const Octant* octant, const PointT& query, float radius, float sqrRadius,
         std::vector<uint32_t>& resultIndices, std::vector<float>& distances) const;
+    
+    template <typename Distance>
+    void nearestNeighbor(const Octant* octant, const PointT& query,
+                         float* const radius, float* const closest_distance,
+                         uint32_t* const resultIndice) const;
 
     /** \brief test if search ball S(q,r) overlaps with octant
      *
@@ -499,6 +566,83 @@ void Octree<PointT, ContainerT>::clear()
   root_ = 0;
   data_ = 0;
   successors_.clear();
+}
+
+template <typename PointT, typename ContainerT>
+template<typename Distance>
+void Octree<PointT, ContainerT>::expand(const PointT& new_pt, const ContainerT& pts,
+                                        const OctreeParams& params) {
+  float prev_root_x = root_->x;
+  float prev_root_y = root_->y;
+  float prev_root_z = root_->z;
+  float prev_root_extent = root_->extent;
+  clear();
+  params_ = params;
+  if (params_.copyPoints)
+    data_ = new ContainerT(pts);
+  else
+    data_ = &pts;
+  const uint32_t N = pts.size();
+  successors_ = std::vector<uint32_t>(N);
+  for (uint32_t i = 0; i < N; ++i)
+    successors_[i] = i + 1;
+  // expand the root cell until new_point is located inside
+  while (!insideOctantCell<Distance>(new_pt, prev_root_x, prev_root_y, prev_root_z, prev_root_extent)) {
+    // chose center of new root as closest corner of current root to new_point
+    std::vector<PointT> corners;
+    std::vector<float> distances_to_corners;
+    corners.push_back(PointT(prev_root_x - prev_root_extent, prev_root_y - prev_root_extent, prev_root_z - prev_root_extent));
+    corners.push_back(PointT(prev_root_x + prev_root_extent, prev_root_y - prev_root_extent, prev_root_z - prev_root_extent));
+    corners.push_back(PointT(prev_root_x + prev_root_extent, prev_root_y + prev_root_extent, prev_root_z - prev_root_extent));
+    corners.push_back(PointT(prev_root_x - prev_root_extent, prev_root_y + prev_root_extent, prev_root_z - prev_root_extent));
+    corners.push_back(PointT(prev_root_x - prev_root_extent, prev_root_y - prev_root_extent, prev_root_z + prev_root_extent));
+    corners.push_back(PointT(prev_root_x + prev_root_extent, prev_root_y - prev_root_extent, prev_root_z + prev_root_extent));
+    corners.push_back(PointT(prev_root_x + prev_root_extent, prev_root_y + prev_root_extent, prev_root_z + prev_root_extent));
+    corners.push_back(PointT(prev_root_x - prev_root_extent, prev_root_y + prev_root_extent, prev_root_z + prev_root_extent));
+    for (unsigned int i = 0; i < corners.size(); ++i)
+      distances_to_corners.push_back(Distance::compute(new_pt, corners[i]));
+    std::vector<float>::iterator closest_corner_it = std::min_element(distances_to_corners.begin(), distances_to_corners.end());
+    int closest_corner_index = std::distance(distances_to_corners.begin(), closest_corner_it) - 1;
+    prev_root_x = corners[closest_corner_index].x;
+    prev_root_y = corners[closest_corner_index].y;
+    prev_root_z = corners[closest_corner_index].z;
+    prev_root_extent *= 2;
+  }
+  root_ = createOctant(prev_root_x, prev_root_y, prev_root_z, prev_root_extent, 0, N - 1, N);
+}
+
+template <typename PointT, typename ContainerT>
+template<typename Distance>
+bool Octree<PointT, ContainerT>::insideOctantCell(const PointT& point, float octant_x, float octant_y, float octant_z, float octant_extent) {
+  std::vector<PointT> corners;
+  PointT above_normal, below_normal, left_normal, right_normal, front_normal, back_normal;
+  bool is_above, is_below, is_left, is_right, is_front, is_back;
+  corners.push_back(PointT(octant_x - octant_extent, octant_y - octant_extent, octant_z - octant_extent));
+  corners.push_back(PointT(octant_x + octant_extent, octant_y - octant_extent, octant_z - octant_extent));
+  corners.push_back(PointT(octant_x + octant_extent, octant_y + octant_extent, octant_z - octant_extent));
+  corners.push_back(PointT(octant_x - octant_extent, octant_y + octant_extent, octant_z - octant_extent));
+  corners.push_back(PointT(octant_x - octant_extent, octant_y - octant_extent, octant_z + octant_extent));
+  corners.push_back(PointT(octant_x + octant_extent, octant_y - octant_extent, octant_z + octant_extent));
+  corners.push_back(PointT(octant_x + octant_extent, octant_y + octant_extent, octant_z + octant_extent));
+  corners.push_back(PointT(octant_x - octant_extent, octant_y + octant_extent, octant_z + octant_extent));
+
+  above_normal = cross(sub(corners[3], corners[2]), sub(corners[6], corners[2]));
+  below_normal = cross(sub(corners[5], corners[1]), sub(corners[0], corners[1]));
+  left_normal  = cross(sub(corners[7], corners[4]), sub(corners[0], corners[4]));
+  right_normal = cross(sub(corners[1], corners[5]), sub(corners[6], corners[5]));
+  front_normal = cross(sub(corners[0], corners[1]), sub(corners[2], corners[1]));
+  back_normal  = cross(sub(corners[6], corners[5]), sub(corners[4], corners[5]));
+
+  is_above = dot(sub(point, corners[3]), above_normal) >= 0.;
+  is_below = dot(sub(point, corners[0]), below_normal) >= 0.;
+  is_left  = dot(sub(point, corners[0]), left_normal)  >= 0.;
+  is_right = dot(sub(point, corners[1]), right_normal) >= 0.;
+  is_front = dot(sub(point, corners[0]), front_normal) >= 0.;
+  is_back  = dot(sub(point, corners[4]), back_normal)  >= 0.;
+  if (!is_above && !is_below && !is_left && !is_right && !is_front && !is_back)
+    return true;
+
+  return false;
 }
 
 template<typename PointT, typename ContainerT>
@@ -697,6 +841,67 @@ void Octree<PointT, ContainerT>::radiusNeighbors(const PointT& query, float radi
 
   float sqrRadius = Distance::sqr(radius);    // "squared" radius
   radiusNeighbors<Distance>(root_, query, radius, sqrRadius, resultIndices, distances);
+}
+
+template <typename PointT, typename ContainerT>
+template <typename Distance>
+void Octree<PointT, ContainerT>::nearestNeighbor(
+    const Octant* octant, const PointT& query, float* const radius,
+    float* const closest_distance, uint32_t* const resultIndice) const {
+  const ContainerT& points = *data_;
+
+  // if search ball S(q,r) contains octant, simply pick closest point index.
+  if (contains<Distance>(query, Distance::sqr(*radius), octant)) {
+    uint32_t idx = octant->start;
+    for (uint32_t i = 0; i < octant->size; ++i) {
+      const PointT& p = points[idx];
+      float dist = Distance::compute(query, p);
+      if (dist < *closest_distance) {
+        *resultIndice = idx;
+        *closest_distance = dist;
+        *radius = dist;
+      }
+      idx = successors_[idx];
+    }
+    return;  // early pruning.
+  }
+
+  if (octant->isLeaf) {
+    uint32_t idx = octant->start;
+    for (uint32_t i = 0; i < octant->size; ++i) {
+      const PointT& p = points[idx];
+      float dist = Distance::compute(query, p);
+      if (dist < Distance::sqr(*radius)) {
+        *resultIndice = idx;
+        *radius = dist;
+      }
+      idx = successors_[idx];
+    }
+    return;
+  }
+
+  // check whether child nodes are in range.
+  for (uint32_t c = 0; c < 8; ++c) {
+    if (octant->child[c] == 0) continue;
+    if (!overlaps<Distance>(query, *radius, Distance::sqr(*radius),
+                            octant->child[c]))
+      continue;
+    nearestNeighbor<Distance>(octant->child[c], query, radius, closest_distance,
+                              resultIndice);
+  }
+}
+
+template <typename PointT, typename ContainerT>
+template <typename Distance>
+void Octree<PointT, ContainerT>::nearestNeighbor(
+    const PointT& query, uint32_t* const resultIndice) const {
+  *resultIndice = 0;
+  if (root_ == 0) return;
+
+  float radius = std::numeric_limits<double>::max();
+  float closest_distance = std::numeric_limits<double>::max();
+  nearestNeighbor<Distance>(root_, query, &radius, &closest_distance,
+                            resultIndice);
 }
 
 template<typename PointT, typename ContainerT>
