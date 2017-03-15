@@ -246,6 +246,137 @@ TEST_F(OctreeTest, Initialize)
   }
 }
 
+TEST_F(OctreeTest, Initialize_minExtent)
+{
+
+  uint32_t N = 1000;
+  unibn::OctreeParams params;
+  params.bucketSize = 16;
+  params.minExtent = 1.0f;
+
+  unibn::Octree<Point3f> oct;
+
+  const Octant* root = getRoot(oct);
+  const std::vector<uint32_t>& successors = getSuccessors(oct);
+
+  ASSERT_EQ(0, root);
+
+  std::vector<Point3f> points;
+  randomPoints(points, N, 1337);
+
+  oct.initialize(points, params);
+
+  root = getRoot(oct);
+
+  // check first some pre-requisits.
+  ASSERT_EQ(true, (root != 0));
+  ASSERT_EQ(N, successors.size());
+
+  std::vector<uint32_t> elementCount(N, 0);
+  uint32_t idx = root->start;
+  for (uint32_t i = 0; i < N; ++i)
+  {
+    ASSERT_LT(idx, N);
+    ASSERT_LE(successors[idx], N);
+    elementCount[idx] += 1;
+    ASSERT_EQ(1, elementCount[idx]);
+    idx = successors[idx];
+  }
+
+  // check that each index was found.
+  for (uint32_t i = 0; i < N; ++i)
+  {
+    ASSERT_EQ(1, elementCount[i]);
+  }
+
+  // test if each Octant contains only points inside the octant and child
+  // octants have only real subsets of parents!
+  std::queue<const Octant*> queue;
+  queue.push(root);
+  std::vector<int32_t> assignment(N, -1);
+
+  while (!queue.empty())
+  {
+    const Octant* octant = queue.front();
+    queue.pop();
+
+    // check points.
+    ASSERT_LT(octant->start, N);
+
+    // test if each point assigned to a octant really is inside the octant.
+
+    uint32_t idx = octant->start;
+    uint32_t lastIdx = octant->start;
+    for (uint32_t i = 0; i < octant->size; ++i)
+    {
+      float x = points[idx].x - octant->x;
+      float y = points[idx].y - octant->y;
+      float z = points[idx].z - octant->z;
+
+      ASSERT_LE(std::abs(x), octant->extent);
+      ASSERT_LE(std::abs(y), octant->extent);
+      ASSERT_LE(std::abs(z), octant->extent);
+      assignment[idx] = -1;  // reset of child assignments.
+      lastIdx = idx;
+      idx = successors[idx];
+    }
+    ASSERT_EQ(octant->end, lastIdx);
+
+    bool shouldBeLeaf = true;
+    Octant* firstchild = 0;
+    Octant* lastchild = 0;
+    uint32_t pointSum = 0;
+
+    for (uint32_t c = 0; c < 8; ++c)
+    {
+      Octant* child = octant->child[c];
+      if (child == 0) continue;
+      shouldBeLeaf = false;
+
+      // child nodes should have start end intervals, which are true subsets of
+      // the parent.
+      if (firstchild == 0) firstchild = child;
+      // the child nodes should have intervals, where succ(e_{c-1}) == s_{c},
+      // and \sum_c size(c) = parent size!
+      if (lastchild != 0) ASSERT_EQ(child->start, successors[lastchild->end]);
+
+      pointSum += child->size;
+      lastchild = child;
+      uint32_t idx = child->start;
+      for (uint32_t i = 0; i < child->size; ++i)
+      {
+        // check if points are uniquely assigned to single child octant.
+        ASSERT_EQ(-1, assignment[idx]);
+        assignment[idx] = c;
+        idx = successors[idx];
+      }
+
+      queue.push(child);
+    }
+
+    // consistent start/end of octant and its first and last children.
+    if (firstchild != 0) ASSERT_EQ(octant->start, firstchild->start);
+    if (lastchild != 0) ASSERT_EQ(octant->end, lastchild->end);
+
+    // check leafs flag.
+    ASSERT_EQ(shouldBeLeaf, octant->isLeaf);
+    ASSERT_EQ((octant->size <= params.bucketSize || octant->extent < 2.0f * params.minExtent), octant->isLeaf);
+    ASSERT_GE(octant->extent, params.minExtent);
+
+    // test if every point is assigned to a child octant.
+    if (!octant->isLeaf)
+    {
+      ASSERT_EQ(octant->size, pointSum);
+      uint32_t idx = octant->start;
+      for (uint32_t i = 0; i < octant->size; ++i)
+      {
+        ASSERT_GT(assignment[idx], -1);
+        idx = successors[idx];
+      }
+    }
+  }
+}
+
 TEST_F(OctreeTest, FindNeighbor)
 {
   // compare with bruteforce search.
