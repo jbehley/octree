@@ -188,11 +188,13 @@ struct MaxDistance
 struct OctreeParams
 {
  public:
-  OctreeParams(uint32_t bucketSize = 32, bool copyPoints = false) : bucketSize(bucketSize), copyPoints(copyPoints)
+  OctreeParams(uint32_t bucketSize = 32, bool copyPoints = false, float minExtent = 0.0f)
+      : bucketSize(bucketSize), copyPoints(copyPoints), minExtent(minExtent)
   {
   }
   uint32_t bucketSize;
   bool copyPoints;
+  float minExtent;
 };
 
 /** \brief Index-based Octree implementation offering different queries and insertion/removal of points.
@@ -365,7 +367,8 @@ Octree<PointT, ContainerT>::Octant::~Octant()
 }
 
 template <typename PointT, typename ContainerT>
-Octree<PointT, ContainerT>::Octree() : root_(0), data_(0)
+Octree<PointT, ContainerT>::Octree()
+    : root_(0), data_(0)
 {
 }
 
@@ -519,7 +522,7 @@ typename Octree<PointT, ContainerT>::Octant* Octree<PointT, ContainerT>::createO
   static const float factor[] = {-0.5f, 0.5f};
 
   // subdivide subset of points and re-link points according to Morton codes
-  if (size > params_.bucketSize)
+  if (size > params_.bucketSize && extent > 2 * params_.minExtent)
   {
     octant->isLeaf = false;
 
