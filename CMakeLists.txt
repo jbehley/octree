@@ -28,3 +28,5 @@ IF(GTEST_FOUND)
 	TARGET_LINK_LIBRARIES(octree-test GTest::GTest GTest::Main)
 	ADD_TEST(octree-test octree-test)
 ENDIF()
+
+install(FILES Octree.hpp DESTINATION include)
